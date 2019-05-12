@@ -1,0 +1,63 @@
+NOAA Storm Database
+========================================================
+author: DDThomas
+date: May 12th, 2019
+autosize: true
+
+Data Products Course Project
+========================================================
+
+I chose to create a tool to allow users to explore the NOAA storm database without having to write or understand R. The following features help the user to do this.
+
+- Filter by range of years (i.e. 1996-2011)
+- View economic impacts of any combionation of severe weather events.
+- Decide between state-by-state breakdown, or view national statistics.
+
+Why look at this data anyways?
+========================================================
+
+```{r, echo=FALSE}
+library(data.table)
+library(rCharts)
+library(reshape2)
+
+dt <- fread('data/events.agg.csv')
+dt.agg.year <- dt[, list(Count=sum(COUNT), Injuries=sum(INJURIES), Fatalities=sum(FATALITIES)), by=list(YEAR)]
+```
+
+Nationally, since 1950, property damages have totaled:
+ - $`r format(round((sum(dt$PROPDMG) ) / 1000), big.mark=' ')` billion
+
+While crop damages have totaled:
+ - $`r format(round((sum(dt$CROPDMG) ) / 1000), big.mark=' ')` billion
+```{r}
+format(round((sum(dt$PROPDMG) ) / 1000), big.mark=' ')
+format(round((sum(dt$CROPDMG) ) / 1000), big.mark=' ')
+```
+
+
+Example of Interactive Plot - Population Injuries and Fatalities 
+========================================================
+```{r nvd3plot2, results = 'asis', comment = NA, message = F, echo = F} 
+
+data <- melt(dt.agg.year[, list(YEAR=YEAR, Injuries=Injuries, Fatalities=Fatalities)], id='YEAR')
+populationImpact <- nPlot(
+    value ~ YEAR, group = 'variable', data = data[order(-YEAR, variable, decreasing = T)],
+    type = 'stackedAreaChart', dom = 'populationImpact'
+)
+        
+populationImpact$chart(margin = list(left = 100))
+populationImpact$yAxis( axisLabel = "Affected", width = 80)
+populationImpact$xAxis( axisLabel = "Year", width = 70)
+        
+populationImpact
+```
+
+Access it now!
+========================================================
+
+[The Shiny NOAA Storm Database App](https://ddthom.shinyapps.io/shiny-app/)
+
+[Github](https://github.com/ddthomas/data-products)
+
+[NOAA Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2)
